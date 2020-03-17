@@ -1,0 +1,7 @@
+python=3.6
+numpy=1.16
+tensorflow=1.7
+opencv-python
+matplotlib
+argparse
+pandas
