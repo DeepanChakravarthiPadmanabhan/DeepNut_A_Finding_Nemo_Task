@@ -4,7 +4,7 @@
 
 The project is done for the subject 'Computer Vision' Winter semester 2019 at Hochschule Bonn-Rhein-Sieg.
 
-A extensive paper on the project work is provided [here](DeepNut-CV2019.pdf).
+An extensive paper on the project work is provided [here](DeepNut-CV2019.pdf).
 
 ### Abstract
 
