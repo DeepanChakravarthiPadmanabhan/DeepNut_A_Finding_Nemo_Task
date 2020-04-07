@@ -5,9 +5,9 @@ import math
 import argparse
 import os
 import pandas as pd
-import sys
 import time
 import datetime
+import logging
 
 label_map = {1:'Peanut',2:'Walnut',3:'Hazelnut'}
 
@@ -73,13 +73,12 @@ def capture_frames(video_data):
     return captured_frames[0], img_idx[min_idx+1]
 
 def run_inference(frozen_graph_path, stable_frame):
-
     # Read the graph.
-    with tf.gfile.FastGFile(frozen_graph_path, 'rb') as f:
-        graph_def = tf.GraphDef()
+    with tf.io.gfile.GFile(frozen_graph_path, 'rb') as f:
+        graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         # Restore session
         sess.graph.as_default()
         tf.import_graph_def(graph_def, name='')
@@ -122,28 +121,6 @@ def run_inference(frozen_graph_path, stable_frame):
         show_frame(img, 'TensorFlow MobileNet-SSD')
 
     return class_label, bbox_list
-
-
-def run_inference_opencv(frozen_graph_path, stable_frame):
-    cvNet = cv.dnn.readNetFromTensorflow(frozen_graph_path, 'graph.pbtxt')
-
-    img = stable_frame
-    rows = img.shape[0]
-    cols = img.shape[1]
-    cvNet.setInput(cv.dnn.blobFromImage(img, size=(300, 300), swapRB=True, crop=False))
-    cvOut = cvNet.forward()
-
-    for detection in cvOut[0, 0, :, :]:
-        score = float(detection[2])
-        if score > 0.3:
-            left = detection[3] * cols
-            top = detection[4] * rows
-            right = detection[5] * cols
-            bottom = detection[6] * rows
-            cv.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), (23, 230, 210), thickness=2)
-
-    cv.imshow('img', img)
-    cv.waitKey()
 
 def get_point(bounding_box):
 
@@ -206,7 +183,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DeepNut- A finding Nemo Task')
     parser.add_argument("inp", type=str, help="input video path")
     parser.add_argument("model", type=str, help="frozen model path")
-    parser.add_argument("out", type=str,nargs='?', default='Result/', help="output csv")
+    parser.add_argument("out", type=str, nargs='?', default='Result/', help="output folder path")
 
     args = parser.parse_args()
 
@@ -214,16 +191,16 @@ if __name__ == '__main__':
     frozen_graph_path = args.model
     output_path = args.out
     output_file_name = (os.path.basename(args.inp)).split('.')[0]
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s',
+                        level=logging.DEBUG)
 
-
-    sys.stdout = open('Logger.txt', 'w')
-    print("Input reading successful [%s]" % str(datetime.datetime.now()))
+    logging.info('Input reading successful [%s]' % str(datetime.datetime.now()))
 
     frozen_graph_path = 'frozen_model/frozen_inference_graph.pb'
     start_time = time.time()
     stable_frame, selected_frame = capture_frames(video_data)
 
-    print("Stable frame extraction completed [%s]" % str(datetime.datetime.now()))
+    logging.info("Stable frame extraction completed [%s]" % str(datetime.datetime.now()))
 
     if TEST:
         print("Selected frame", selected_frame)
@@ -235,11 +212,11 @@ if __name__ == '__main__':
     if TEST:
         stable_frame = enhance_CLAHE(stable_frame)
 
-    print("Running inference [%s]" % str(datetime.datetime.now()))
+    logging.info("Running inference [%s]" % str(datetime.datetime.now()))
 
-    class_label, bounding_box = run_inference_opencv(frozen_graph_path, stable_frame)
+    class_label, bounding_box = run_inference(frozen_graph_path, stable_frame)
 
-    print("Inference run completed [%s]" % str(datetime.datetime.now()))
+    logging.info("Inference run completed [%s]" % str(datetime.datetime.now()))
 
     lines_in_output = get_output_format(class_label, bounding_box, selected_frame)
 
@@ -283,15 +260,14 @@ if __name__ == '__main__':
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
-    print("Formatting output [%s]" % str(datetime.datetime.now()))
+    logging.info("Formatting output [%s]" % str(datetime.datetime.now()))
 
-    file_name = output_path+'/'+output_file_name+'.csv'
+    file_name = output_path + '/' + output_file_name + '.csv'
 
     results = pd.DataFrame([lines_in_output])
     results.T.to_csv(file_name, encoding='utf-8', header=False, index=False)
 
     end_time = time.time()
-    print("Time taken to extract stable frame:", end_time - start_time)
-    print("I completed my task. Chau. [%s]" % str(datetime.datetime.now()))
-
-
+    time_taken = end_time - start_time
+    logging.info("Time taken to extract stable frame: [%f]", time_taken)
+    logging.info("I completed my task. Chau. [%s]" % str(datetime.datetime.now()))

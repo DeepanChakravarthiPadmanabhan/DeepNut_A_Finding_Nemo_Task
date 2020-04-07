@@ -1,0 +1,7 @@
+root - INFO - Input reading successful [2020-04-07 07:50:24.704059]
+root - INFO - Stable frame extraction completed [2020-04-07 07:50:25.085189]
+root - INFO - Running inference [2020-04-07 07:50:25.235015]
+root - INFO - Inference run completed [2020-04-07 07:50:25.983604]
+root - INFO - Formatting output [2020-04-07 07:50:25.984029]
+root - INFO - Time taken to extract stable frame: [1.282188]
+root - INFO - I completed my task. Chau. [2020-04-07 07:50:25.986651]
