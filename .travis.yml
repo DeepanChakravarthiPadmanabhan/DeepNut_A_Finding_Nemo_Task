@@ -13,4 +13,4 @@ install:
     - pip install -r requirements.txt
 
 script:
-    -python3 pipeline.py
+    -python3 pipeline.py data/CV19_video_57.avi frozen_model/frozen_inference_graph.pb
