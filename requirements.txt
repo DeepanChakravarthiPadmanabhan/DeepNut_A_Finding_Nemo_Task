@@ -1,6 +1,6 @@
 python=3.6
 numpy=1.16
-tensorflow=1.14
+tensorflow=1.16
 opencv-python
 matplotlib
 argparse
